@@ -44,14 +44,14 @@ const POSContext = createContext<POSContextType | undefined>(undefined);
 
 // Mock menu items
 const initialMenuItems: MenuItem[] = [
-  { id: '1', name: 'Big Burger', price: 12.99, category: 'Burgers', stock: 25 },
-  { id: '2', name: 'Cheese Burger', price: 10.99, category: 'Burgers', stock: 30 },
-  { id: '3', name: 'Chicken Wings', price: 8.99, category: 'Chicken', stock: 40 },
-  { id: '4', name: 'French Fries', price: 4.99, category: 'Sides', stock: 50 },
-  { id: '5', name: 'Coca Cola', price: 2.99, category: 'Drinks', stock: 60 },
-  { id: '6', name: 'Chicken Sandwich', price: 9.99, category: 'Chicken', stock: 20 },
-  { id: '7', name: 'Fish Burger', price: 11.99, category: 'Burgers', stock: 15 },
-  { id: '8', name: 'Onion Rings', price: 5.99, category: 'Sides', stock: 35 },
+  { id: '1', name: 'Big Burger', price: 12.99, category: 'Burgers', stock: 25, image: '/src/assets/big-burger.jpg' },
+  { id: '2', name: 'Cheese Burger', price: 10.99, category: 'Burgers', stock: 30, image: '/src/assets/cheese-burger.jpg' },
+  { id: '3', name: 'Chicken Wings', price: 8.99, category: 'Chicken', stock: 40, image: '/src/assets/chicken-wings.jpg' },
+  { id: '4', name: 'French Fries', price: 4.99, category: 'Sides', stock: 50, image: '/src/assets/french-fries.jpg' },
+  { id: '5', name: 'Coca Cola', price: 2.99, category: 'Drinks', stock: 60, image: '/src/assets/coca-cola.jpg' },
+  { id: '6', name: 'Chicken Sandwich', price: 9.99, category: 'Chicken', stock: 20, image: '/src/assets/chicken-sandwich.jpg' },
+  { id: '7', name: 'Fish Burger', price: 11.99, category: 'Burgers', stock: 15, image: '/src/assets/fish-burger.jpg' },
+  { id: '8', name: 'Onion Rings', price: 5.99, category: 'Sides', stock: 35, image: '/src/assets/onion-rings.jpg' },
 ];
 
 export const POSProvider = ({ children }: { children: ReactNode }) => {

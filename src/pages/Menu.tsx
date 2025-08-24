@@ -252,7 +252,16 @@ const Menu = () => {
       {/* Menu Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredItems.map((item) => (
-          <Card key={item.id} className="relative">
+          <Card key={item.id} className="relative overflow-hidden">
+            {item.image && (
+              <div className="aspect-video overflow-hidden">
+                <img 
+                  src={item.image} 
+                  alt={item.name}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            )}
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>

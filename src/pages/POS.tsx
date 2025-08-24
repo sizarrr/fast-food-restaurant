@@ -108,11 +108,20 @@ const POS = () => {
             <Card 
               key={item.id} 
               className={cn(
-                "cursor-pointer transition-shadow hover:shadow-md",
-                viewMode === 'list' && 'flex-row'
+                "cursor-pointer transition-shadow hover:shadow-md overflow-hidden",
+                viewMode === 'list' ? 'flex-row' : 'group'
               )}
               onClick={() => addToCart(item)}
             >
+              {viewMode === 'grid' && item.image && (
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
               <CardHeader className={cn(
                 "pb-3",
                 viewMode === 'list' && 'pb-2 pr-2'
@@ -121,6 +130,15 @@ const POS = () => {
                   "flex justify-between items-start",
                   viewMode === 'list' && 'flex-1'
                 )}>
+                  {viewMode === 'list' && item.image && (
+                    <div className="w-20 h-20 mr-4 rounded-lg overflow-hidden flex-shrink-0">
+                      <img 
+                        src={item.image} 
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <CardTitle className="text-lg">{item.name}</CardTitle>
                     <CardDescription>{item.category}</CardDescription>
