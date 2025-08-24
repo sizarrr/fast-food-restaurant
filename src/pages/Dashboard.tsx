@@ -1,6 +1,7 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   DollarSign,
   ShoppingBag,
@@ -20,6 +21,15 @@ const Dashboard = () => {
     return orderDate.toDateString() === today.toDateString();
   });
 
+  // Calculate monthly sales
+  const currentMonth = new Date();
+  const monthlyOrders = orders.filter(order => {
+    const orderDate = new Date(order.timestamp);
+    return orderDate.getMonth() === currentMonth.getMonth() &&
+           orderDate.getFullYear() === currentMonth.getFullYear();
+  });
+  const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + order.total, 0);
+
   const totalRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
   const pendingOrders = orders.filter(order => order.status === 'pending');
   const lowStockItems = menuItems.filter(item => item.stock <= 5);
@@ -33,18 +43,18 @@ const Dashboard = () => {
       color: 'text-success'
     },
     {
+      title: "Monthly Sales",
+      value: `$${monthlyRevenue.toFixed(2)}`,
+      description: `${monthlyOrders.length} orders this month`,
+      icon: TrendingUp,
+      color: 'text-primary'
+    },
+    {
       title: "Pending Orders",
       value: pendingOrders.length.toString(),
       description: "Orders awaiting preparation",
       icon: Clock,
       color: 'text-warning'
-    },
-    {
-      title: "Menu Items",
-      value: menuItems.length.toString(),
-      description: "Active menu items",
-      icon: Package,
-      color: 'text-primary'
     },
     {
       title: "Low Stock Alerts",

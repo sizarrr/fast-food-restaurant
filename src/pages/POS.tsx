@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
+import Receipt from '@/components/Receipt';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const POS = () => {
-  const { menuItems, cart, addToCart, removeFromCart, updateCartQuantity, createOrder } = usePOS();
+  const { menuItems, cart, addToCart, removeFromCart, updateCartQuantity, createOrder, currentReceipt, setCurrentReceipt } = usePOS();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -39,7 +40,14 @@ const POS = () => {
   };
 
   return (
-    <div className="h-full flex gap-6">
+    <>
+      {currentReceipt && (
+        <Receipt 
+          order={currentReceipt} 
+          onClose={() => setCurrentReceipt(null)} 
+        />
+      )}
+      <div className="h-full flex gap-6">
       {/* Menu Section */}
       <div className="flex-1 space-y-4">
         <div className="flex items-center justify-between">
@@ -229,6 +237,7 @@ const POS = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

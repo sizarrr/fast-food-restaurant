@@ -27,6 +27,7 @@ interface POSContextType {
   menuItems: MenuItem[];
   cart: OrderItem[];
   orders: Order[];
+  currentReceipt: Order | null;
   addToCart: (item: MenuItem) => void;
   removeFromCart: (itemId: string) => void;
   updateCartQuantity: (itemId: string, quantity: number) => void;
@@ -36,6 +37,7 @@ interface POSContextType {
   addMenuItem: (item: Omit<MenuItem, 'id'>) => void;
   updateMenuItem: (id: string, item: Partial<MenuItem>) => void;
   deleteMenuItem: (id: string) => void;
+  setCurrentReceipt: (order: Order | null) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [currentReceipt, setCurrentReceipt] = useState<Order | null>(null);
 
   const addToCart = (item: MenuItem) => {
     if (item.stock <= 0) {
@@ -131,6 +134,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
+    setCurrentReceipt(newOrder);
     toast({ title: "Order created", description: `Order #${newOrder.id} created successfully` });
   };
 
@@ -168,6 +172,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       menuItems,
       cart,
       orders,
+      currentReceipt,
       addToCart,
       removeFromCart,
       updateCartQuantity,
@@ -177,6 +182,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       addMenuItem,
       updateMenuItem,
       deleteMenuItem,
+      setCurrentReceipt,
     }}>
       {children}
     </POSContext.Provider>
