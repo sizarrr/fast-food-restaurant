@@ -1,4 +1,5 @@
 import { Order } from '@/contexts/POSContext';
+import { useEffect } from 'react';
 import { format } from 'date-fns';
 import { useSettings } from '@/contexts/SettingsContext';
 
@@ -12,6 +13,11 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
     window.print();
   };
   const { settings, formatCurrency } = useSettings();
+
+  useEffect(() => {
+    handlePrint();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -71,10 +77,12 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
                   <span>-{formatCurrency(order.costs.discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Tax:</span>
-                <span>{formatCurrency(order.costs.tax)}</span>
-              </div>
+              {order.costs.tax > 0 && (
+                <div className="flex justify-between">
+                  <span>Tax:</span>
+                  <span>{formatCurrency(order.costs.tax)}</span>
+                </div>
+              )}
             </div>
             <div className="flex justify-between text-lg font-bold mt-2">
               <span>Total:</span>

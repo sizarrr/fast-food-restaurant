@@ -15,7 +15,7 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import PaymentDialog from '@/components/PaymentDialog';
+// import PaymentDialog from '@/components/PaymentDialog';
 import { useSettings } from '@/contexts/SettingsContext';
 
 const POS = () => {
@@ -24,7 +24,7 @@ const POS = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  // const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category)))];
 
@@ -248,7 +248,13 @@ const POS = () => {
                 <Button 
                   className="w-full" 
                   size="lg" 
-                  onClick={() => setIsPaymentOpen(true)}
+                  onClick={() => {
+                    createOrder({
+                      type: 'takeaway',
+                      payment: undefined,
+                      costs: { discount: 0, tax: 0 },
+                    });
+                  }}
                   disabled={cart.length === 0}
                 >
                   Checkout
@@ -259,14 +265,7 @@ const POS = () => {
         </Card>
       </div>
     </div>
-    <PaymentDialog
-      open={isPaymentOpen}
-      onOpenChange={setIsPaymentOpen}
-      subtotal={cartSubtotal}
-      onConfirm={({ type, payment, costs }) => {
-        createOrder({ type, payment, costs });
-      }}
-    />
+    {/* Payment dialog removed for quick checkout */}
     </>
   );
 };
