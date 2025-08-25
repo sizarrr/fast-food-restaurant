@@ -1,5 +1,6 @@
 import { Order } from '@/contexts/POSContext';
 import { format } from 'date-fns';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface ReceiptProps {
   order: Order;
@@ -10,6 +11,7 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
   const handlePrint = () => {
     window.print();
   };
+  const { settings, formatCurrency } = useSettings();
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -17,9 +19,9 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
         <div id="receipt-content" className="space-y-4">
           {/* Header */}
           <div className="text-center border-b pb-4">
-            <h1 className="text-2xl font-bold">FastFood POS</h1>
-            <p className="text-sm text-muted-foreground">123 Restaurant Street</p>
-            <p className="text-sm text-muted-foreground">Phone: (555) 123-4567</p>
+            <h1 className="text-2xl font-bold">{settings.store.name}</h1>
+            <p className="text-sm text-muted-foreground">{settings.store.addressLine1}</p>
+            <p className="text-sm text-muted-foreground">Phone: {settings.store.phone}</p>
           </div>
 
           {/* Order Info */}
@@ -46,11 +48,11 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
                 <div className="flex-1">
                   <div>{item.menuItem.name}</div>
                   <div className="text-muted-foreground">
-                    ${item.menuItem.price.toFixed(2)} x {item.quantity}
+                    {formatCurrency(item.menuItem.price)} x {item.quantity}
                   </div>
                 </div>
                 <div className="font-medium">
-                  ${(item.menuItem.price * item.quantity).toFixed(2)}
+                  {formatCurrency(item.menuItem.price * item.quantity)}
                 </div>
               </div>
             ))}
@@ -58,11 +60,55 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
 
           {/* Total */}
           <div className="border-t pt-4">
-            <div className="flex justify-between text-lg font-bold">
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>{formatCurrency(order.costs.subtotal)}</span>
+              </div>
+              {order.costs.discount > 0 && (
+                <div className="flex justify-between">
+                  <span>Discount:</span>
+                  <span>-{formatCurrency(order.costs.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Tax:</span>
+                <span>{formatCurrency(order.costs.tax)}</span>
+              </div>
+            </div>
+            <div className="flex justify-between text-lg font-bold mt-2">
               <span>Total:</span>
-              <span>${order.total.toFixed(2)}</span>
+              <span>{formatCurrency(order.costs.total)}</span>
             </div>
           </div>
+
+          {/* Payment */}
+          {order.payment && (
+            <div className="border-t pt-4 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Payment:</span>
+                <span className="capitalize">{order.payment.method}</span>
+              </div>
+              {order.payment.tendered !== undefined && (
+                <div className="flex justify-between">
+                  <span>Tendered:</span>
+                  <span>{formatCurrency(order.payment.tendered)}</span>
+                </div>
+              )}
+              {order.payment.change !== undefined && (
+                <div className="flex justify-between">
+                  <span>Change:</span>
+                  <span>{formatCurrency(order.payment.change)}</span>
+                </div>
+              )}
+              {order.payment.reference && (
+                <div className="flex justify-between">
+                  <span>Reference:</span>
+                  <span>{order.payment.reference}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground border-t pt-4">

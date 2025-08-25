@@ -13,6 +13,8 @@ import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
 import Reports from "@/pages/Reports";
 import NotFound from "./pages/NotFound";
+import { SettingsProvider } from "@/contexts/SettingsContext";
+import Settings from "@/pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +79,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -89,9 +99,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <POSProvider>
-            <AppRoutes />
-          </POSProvider>
+          <SettingsProvider>
+            <POSProvider>
+              <AppRoutes />
+            </POSProvider>
+          </SettingsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

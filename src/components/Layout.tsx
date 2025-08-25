@@ -8,10 +8,12 @@ import {
   ClipboardList, 
   BarChart3, 
   LogOut,
-  Store
+  Store,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import ThemeToggle from '@/components/ui/theme-toggle';
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,7 +35,7 @@ const Layout = ({ children }: LayoutProps) => {
   // Filter navigation based on user role
   const filteredNavigation = user?.role === 'cashier' 
     ? navigation.filter(item => ['Dashboard', 'POS', 'Orders'].includes(item.name))
-    : navigation;
+    : [...navigation, { name: 'Settings', href: '/settings', icon: SettingsIcon }];
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,6 +51,9 @@ const Layout = ({ children }: LayoutProps) => {
                 <p className="text-sm text-muted-foreground">
                   {user?.role === 'admin' ? 'Administrator' : 'Cashier'}
                 </p>
+              </div>
+              <div className="ml-auto">
+                <ThemeToggle />
               </div>
             </div>
           </div>
@@ -75,16 +80,23 @@ const Layout = ({ children }: LayoutProps) => {
             })}
           </nav>
 
-          {/* User info and logout */}
+          {/* Settings (admin) + user info and logout */}
           <div className="p-4 border-t border-border">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{user?.username}</p>
                 <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {user?.role === 'admin' && (
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+                    <SettingsIcon className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

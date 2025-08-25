@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePOS } from '@/contexts/POSContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,9 +20,12 @@ import {
   DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/contexts/SettingsContext';
+import { saveAs } from 'file-saver';
 
 const Orders = () => {
   const { orders, updateOrderStatus } = usePOS();
+  const { formatCurrency } = useSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('today');
@@ -50,12 +53,38 @@ const Orders = () => {
         const orderDate = new Date(order.timestamp);
         return orderDate.toDateString() === today.toDateString();
       });
+    } else if (dateFilter === '7days') {
+      const from = new Date();
+      from.setDate(from.getDate() - 6);
+      from.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(order => new Date(order.timestamp).getTime() >= from.getTime());
     }
 
     return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
 
   const filteredOrders = getFilteredOrders();
+
+  const exportCsv = () => {
+    const headers = ['id','status','type','timestamp','items','subtotal','discount','tax','total'];
+    const rows = filteredOrders.map(o => {
+      const items = o.items.map(i => `${i.menuItem.name} x${i.quantity}`).join('; ');
+      return [
+        o.id,
+        o.status,
+        o.type,
+        new Date(o.timestamp).toISOString(),
+        items,
+        o.costs.subtotal.toFixed(2),
+        o.costs.discount.toFixed(2),
+        o.costs.tax.toFixed(2),
+        o.costs.total.toFixed(2)
+      ].join(',');
+    });
+    const content = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `orders_${Date.now()}.csv`);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -88,7 +117,7 @@ const Orders = () => {
     pending: filteredOrders.filter(o => o.status === 'pending').length,
     preparing: filteredOrders.filter(o => o.status === 'preparing').length,
     completed: filteredOrders.filter(o => o.status === 'completed').length,
-    revenue: filteredOrders.reduce((sum, order) => sum + order.total, 0)
+    revenue: filteredOrders.reduce((sum, order) => sum + order.costs.total, 0)
   };
 
   return (
@@ -182,9 +211,11 @@ const Orders = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="7days">Last 7 Days</SelectItem>
             <SelectItem value="all">All Time</SelectItem>
           </SelectContent>
         </Select>
+        <Button className="w-full sm:w-auto" variant="outline" onClick={exportCsv}>Export CSV</Button>
       </div>
 
       {/* Orders List */}
@@ -215,7 +246,7 @@ const Orders = () => {
                           {order.timestamp.toLocaleDateString()}
                         </span>
                         <span>{order.timestamp.toLocaleTimeString()}</span>
-                        <span className="font-medium">${order.total.toFixed(2)}</span>
+                        <span className="font-medium">{formatCurrency(order.costs.total)}</span>
                       </CardDescription>
                     </div>
                   </div>
