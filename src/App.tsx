@@ -37,11 +37,46 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={<Navigate to="/dashboard" />} />
       <Route path="/" element={<Navigate to="/dashboard" />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-      <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
-      <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pos"
+        element={
+          <ProtectedRoute>
+            <POS />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menu"
+        element={
+          <ProtectedRoute>
+            <Menu />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
