@@ -52,7 +52,7 @@ interface POSContextType {
   removeFromCart: (itemId: string) => void;
   updateCartQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  createOrder: (options?: { type?: OrderType; payment?: PaymentInfo; costs?: Partial<OrderCostBreakdown> }) => void;
+  createOrder: (options?: { costs?: Partial<OrderCostBreakdown> }) => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   addMenuItem: (item: Omit<MenuItem, 'id'>) => void;
   updateMenuItem: (id: string, item: Partial<MenuItem>) => void;
@@ -163,22 +163,22 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     setCart([]);
   };
 
-  const createOrder = (options?: { type?: OrderType; payment?: PaymentInfo; costs?: Partial<OrderCostBreakdown> }) => {
+  const createOrder = (options?: { costs?: Partial<OrderCostBreakdown> }) => {
     if (cart.length === 0) {
       toast({ title: "Empty cart", description: "Please add items to cart first", variant: "destructive" });
       return;
     }
     const subtotal = cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0);
     const discount = options?.costs?.discount ?? 0;
-    const tax = options?.costs?.tax ?? (Math.max(0, subtotal - discount) * (settings.taxRatePercent / 100));
-    const total = Math.max(0, subtotal - discount + tax);
+    const tax = options?.costs?.tax ?? 0; // No tax calculation
+    const total = options?.costs?.total ?? subtotal; // Just use subtotal as total
     const newOrder: Order = {
       id: Date.now().toString(),
       items: [...cart],
       costs: { subtotal, discount, tax, total },
       status: 'pending',
-      type: options?.type ?? 'takeaway',
-      payment: options?.payment,
+      type: 'takeaway', // Fixed to takeaway - no order type selection
+      payment: undefined, // No payment info needed
       timestamp: new Date(),
     };
 

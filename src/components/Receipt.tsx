@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Order } from '@/contexts/POSContext';
 import { format } from 'date-fns';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -8,10 +9,20 @@ interface ReceiptProps {
 }
 
 const Receipt = ({ order, onClose }: ReceiptProps) => {
+  const { settings, formatCurrency } = useSettings();
+
   const handlePrint = () => {
     window.print();
   };
-  const { settings, formatCurrency } = useSettings();
+
+  // Auto-print when receipt opens
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handlePrint();
+    }, 500); // Small delay to ensure DOM is fully rendered
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -60,55 +71,11 @@ const Receipt = ({ order, onClose }: ReceiptProps) => {
 
           {/* Total */}
           <div className="border-t pt-4">
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>{formatCurrency(order.costs.subtotal)}</span>
-              </div>
-              {order.costs.discount > 0 && (
-                <div className="flex justify-between">
-                  <span>Discount:</span>
-                  <span>-{formatCurrency(order.costs.discount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span>Tax:</span>
-                <span>{formatCurrency(order.costs.tax)}</span>
-              </div>
-            </div>
-            <div className="flex justify-between text-lg font-bold mt-2">
+            <div className="flex justify-between text-xl font-bold">
               <span>Total:</span>
               <span>{formatCurrency(order.costs.total)}</span>
             </div>
           </div>
-
-          {/* Payment */}
-          {order.payment && (
-            <div className="border-t pt-4 text-sm space-y-1">
-              <div className="flex justify-between">
-                <span>Payment:</span>
-                <span className="capitalize">{order.payment.method}</span>
-              </div>
-              {order.payment.tendered !== undefined && (
-                <div className="flex justify-between">
-                  <span>Tendered:</span>
-                  <span>{formatCurrency(order.payment.tendered)}</span>
-                </div>
-              )}
-              {order.payment.change !== undefined && (
-                <div className="flex justify-between">
-                  <span>Change:</span>
-                  <span>{formatCurrency(order.payment.change)}</span>
-                </div>
-              )}
-              {order.payment.reference && (
-                <div className="flex justify-between">
-                  <span>Reference:</span>
-                  <span>{order.payment.reference}</span>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground border-t pt-4">

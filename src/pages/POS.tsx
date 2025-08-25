@@ -263,8 +263,8 @@ const POS = () => {
       open={isPaymentOpen}
       onOpenChange={setIsPaymentOpen}
       subtotal={cartSubtotal}
-      onConfirm={({ type, payment, costs }) => {
-        createOrder({ type, payment, costs });
+      onConfirm={({ costs }) => {
+        createOrder({ costs });
       }}
     />
     </>
