@@ -23,8 +23,11 @@ import {
   Calendar
 } from 'lucide-react';
 
+import { useSettings } from '@/contexts/SettingsContext';
+
 const Reports = () => {
   const { orders, menuItems } = usePOS();
+  const { formatCurrency, settings } = useSettings();
 
   // Calculate daily sales for the last 7 days
   const getDailySales = () => {
@@ -40,7 +43,7 @@ const Reports = () => {
         return orderDate.toDateString() === date.toDateString();
       });
       
-      const revenue = dayOrders.reduce((sum, order) => sum + order.total, 0);
+      const revenue = dayOrders.reduce((sum, order) => sum + order.costs.total, 0);
       
       return {
         date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -97,7 +100,7 @@ const Reports = () => {
   const topItems = getTopSellingItems();
 
   // Calculate overall stats
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + order.costs.total, 0);
   const totalOrders = orders.length;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const todayRevenue = orders
@@ -106,7 +109,7 @@ const Reports = () => {
       const orderDate = new Date(order.timestamp);
       return orderDate.toDateString() === today.toDateString();
     })
-    .reduce((sum, order) => sum + order.total, 0);
+    .reduce((sum, order) => sum + order.costs.total, 0);
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -125,7 +128,7 @@ const Reports = () => {
             <DollarSign className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
@@ -135,7 +138,7 @@ const Reports = () => {
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${todayRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(todayRevenue)}</div>
             <p className="text-xs text-muted-foreground">Today's sales</p>
           </CardContent>
         </Card>
@@ -155,7 +158,7 @@ const Reports = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${averageOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(averageOrderValue)}</div>
             <p className="text-xs text-muted-foreground">Per order average</p>
           </CardContent>
         </Card>
@@ -222,7 +225,7 @@ const Reports = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
+                <Tooltip formatter={(value) => [`${formatCurrency(Number(value))}`, 'Revenue']} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

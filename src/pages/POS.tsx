@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
 import Receipt from '@/components/Receipt';
@@ -15,12 +15,16 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import PaymentDialog from '@/components/PaymentDialog';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const POS = () => {
   const { menuItems, cart, addToCart, removeFromCart, updateCartQuantity, createOrder, currentReceipt, setCurrentReceipt } = usePOS();
+  const { formatCurrency } = useSettings();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category)))];
 
@@ -30,7 +34,7 @@ const POS = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0);
+  const cartSubtotal = useMemo(() => cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0), [cart]);
 
   const handleQuantityChange = (itemId: string, change: number) => {
     const cartItem = cart.find(item => item.menuItem.id === itemId);
@@ -236,18 +240,18 @@ const POS = () => {
 
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total:</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>Subtotal:</span>
+                    <span>{formatCurrency(cartSubtotal)}</span>
                   </div>
                 </div>
 
                 <Button 
                   className="w-full" 
                   size="lg" 
-                  onClick={createOrder}
+                  onClick={() => setIsPaymentOpen(true)}
                   disabled={cart.length === 0}
                 >
-                  Place Order
+                  Checkout
                 </Button>
               </>
             )}
@@ -255,6 +259,14 @@ const POS = () => {
         </Card>
       </div>
     </div>
+    <PaymentDialog
+      open={isPaymentOpen}
+      onOpenChange={setIsPaymentOpen}
+      subtotal={cartSubtotal}
+      onConfirm={({ type, payment, costs }) => {
+        createOrder({ type, payment, costs });
+      }}
+    />
     </>
   );
 };

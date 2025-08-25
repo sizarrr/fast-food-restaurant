@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { useSettings } from './SettingsContext';
 
 export interface MenuItem {
   id: string;
@@ -15,11 +16,30 @@ export interface OrderItem {
   quantity: number;
 }
 
+export type OrderType = 'dine-in' | 'takeaway' | 'delivery';
+export type PaymentMethod = 'cash' | 'card' | 'mobile';
+
+export interface OrderCostBreakdown {
+  subtotal: number;
+  discount: number; // absolute amount applied
+  tax: number; // absolute amount applied
+  total: number; // subtotal - discount + tax
+}
+
+export interface PaymentInfo {
+  method: PaymentMethod;
+  tendered?: number; // for cash
+  change?: number; // for cash
+  reference?: string; // transaction id for card/mobile
+}
+
 export interface Order {
   id: string;
   items: OrderItem[];
-  total: number;
+  costs: OrderCostBreakdown;
   status: 'pending' | 'preparing' | 'completed';
+  type: OrderType;
+  payment?: PaymentInfo;
   timestamp: Date;
 }
 
@@ -32,7 +52,7 @@ interface POSContextType {
   removeFromCart: (itemId: string) => void;
   updateCartQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  createOrder: () => void;
+  createOrder: (options?: { type?: OrderType; payment?: PaymentInfo; costs?: Partial<OrderCostBreakdown> }) => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   addMenuItem: (item: Omit<MenuItem, 'id'>) => void;
   updateMenuItem: (id: string, item: Partial<MenuItem>) => void;
@@ -55,10 +75,47 @@ const initialMenuItems: MenuItem[] = [
 ];
 
 export const POSProvider = ({ children }: { children: ReactNode }) => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
-  const [cart, setCart] = useState<OrderItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { settings } = useSettings();
+
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('ffpos_menu_v1');
+      if (raw) return JSON.parse(raw);
+      return initialMenuItems;
+    } catch {
+      return initialMenuItems;
+    }
+  });
+  const [cart, setCart] = useState<OrderItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('ffpos_cart_v1');
+      if (raw) return JSON.parse(raw);
+      return [];
+    } catch {
+      return [];
+    }
+  });
+  const [orders, setOrders] = useState<Order[]>(() => {
+    try {
+      const raw = localStorage.getItem('ffpos_orders_v1');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as Order[];
+      return parsed.map(o => ({ ...o, timestamp: new Date(o.timestamp) }));
+    } catch {
+      return [];
+    }
+  });
   const [currentReceipt, setCurrentReceipt] = useState<Order | null>(null);
+
+  useEffect(() => {
+    try { localStorage.setItem('ffpos_menu_v1', JSON.stringify(menuItems)); } catch {}
+  }, [menuItems]);
+  useEffect(() => {
+    try { localStorage.setItem('ffpos_cart_v1', JSON.stringify(cart)); } catch {}
+  }, [cart]);
+  useEffect(() => {
+    try { localStorage.setItem('ffpos_orders_v1', JSON.stringify(orders)); } catch {}
+  }, [orders]);
 
   const addToCart = (item: MenuItem) => {
     if (item.stock <= 0) {
@@ -106,18 +163,22 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     setCart([]);
   };
 
-  const createOrder = () => {
+  const createOrder = (options?: { type?: OrderType; payment?: PaymentInfo; costs?: Partial<OrderCostBreakdown> }) => {
     if (cart.length === 0) {
       toast({ title: "Empty cart", description: "Please add items to cart first", variant: "destructive" });
       return;
     }
-
-    const total = cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0);
+    const subtotal = cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0);
+    const discount = options?.costs?.discount ?? 0;
+    const tax = options?.costs?.tax ?? (Math.max(0, subtotal - discount) * (settings.taxRatePercent / 100));
+    const total = Math.max(0, subtotal - discount + tax);
     const newOrder: Order = {
       id: Date.now().toString(),
       items: [...cart],
-      total,
+      costs: { subtotal, discount, tax, total },
       status: 'pending',
+      type: options?.type ?? 'takeaway',
+      payment: options?.payment,
       timestamp: new Date(),
     };
 

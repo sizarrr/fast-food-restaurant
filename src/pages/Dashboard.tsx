@@ -11,8 +11,11 @@ import {
   Clock
 } from 'lucide-react';
 
+import { useSettings } from '@/contexts/SettingsContext';
+
 const Dashboard = () => {
   const { orders, menuItems } = usePOS();
+  const { settings, formatCurrency } = useSettings();
 
   // Calculate statistics
   const todayOrders = orders.filter(order => {
@@ -28,23 +31,23 @@ const Dashboard = () => {
     return orderDate.getMonth() === currentMonth.getMonth() &&
            orderDate.getFullYear() === currentMonth.getFullYear();
   });
-  const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + order.total, 0);
+  const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + order.costs.total, 0);
 
-  const totalRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
+  const totalRevenue = todayOrders.reduce((sum, order) => sum + order.costs.total, 0);
   const pendingOrders = orders.filter(order => order.status === 'pending');
-  const lowStockItems = menuItems.filter(item => item.stock <= 5);
+  const lowStockItems = menuItems.filter(item => item.stock <= settings.lowStockThreshold);
 
   const stats = [
     {
       title: "Today's Revenue",
-      value: `$${totalRevenue.toFixed(2)}`,
+      value: `${formatCurrency(totalRevenue)}`,
       description: `${todayOrders.length} orders today`,
       icon: DollarSign,
       color: 'text-success'
     },
     {
       title: "Monthly Sales",
-      value: `$${monthlyRevenue.toFixed(2)}`,
+      value: `${formatCurrency(monthlyRevenue)}`,
       description: `${monthlyOrders.length} orders this month`,
       icon: TrendingUp,
       color: 'text-primary'
@@ -129,7 +132,7 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="font-medium">${order.total.toFixed(2)}</span>
+                      <span className="font-medium">{formatCurrency(order.costs.total)}</span>
                     </div>
                   </div>
                 ))}

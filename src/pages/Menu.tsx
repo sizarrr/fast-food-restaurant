@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePOS } from '@/contexts/POSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -38,12 +38,15 @@ import {
   Edit,
   Trash2,
   Search,
-  AlertTriangle
+  AlertTriangle,
+  PackagePlus
 } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const Menu = () => {
   const { user } = useAuth();
   const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem } = usePOS();
+  const { settings } = useSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -107,7 +110,7 @@ const Menu = () => {
     setIsEditDialogOpen(true);
   };
 
-  const lowStockItems = menuItems.filter(item => item.stock <= 5);
+  const lowStockItems = useMemo(() => menuItems.filter(item => item.stock <= settings.lowStockThreshold), [menuItems, settings.lowStockThreshold]);
 
   return (
     <div className="space-y-6">
@@ -354,6 +357,42 @@ const Menu = () => {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+
+                  {user?.role === 'admin' && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <PackagePlus className="h-3 w-3 mr-1" />
+                          Restock
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Restock Item</DialogTitle>
+                          <DialogDescription>Increase available stock for this item.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="restock-qty">Quantity to Add</Label>
+                            <Input id="restock-qty" type="number" min={1} defaultValue={1} onChange={(e) => {
+                              const value = parseInt(e.target.value || '0');
+                              setFormData({ ...formData, stock: value.toString() });
+                            }} />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline">Cancel</Button>
+                          <Button onClick={() => {
+                            const inc = parseInt(formData.stock || '0');
+                            if (inc > 0) {
+                              updateMenuItem(item.id, { stock: item.stock + inc });
+                            }
+                            setFormData({ ...formData, stock: '' });
+                          }}>Apply</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
